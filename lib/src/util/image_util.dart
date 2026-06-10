@@ -67,30 +67,41 @@ class ImageUtil {
   }
 
   static Future<void> _cleanUpPreviousTempDir(Directory imgTempDir) async {
-    if (!(await imgTempDir.exists())) return; // guard.
+    // 보조적 정리 작업이므로 어떤 예외도 init 을 실패시키지 않도록 전체를 감싼다.
+    // (list()/toList() 스트림 순회 중 동시 삭제·권한 등으로 FileSystemException 가능)
+    try {
+      if (!(await imgTempDir.exists())) return; // guard.
 
-    final previousCacheFolderStream = imgTempDir.list();
-    final previousCacheFolders = await previousCacheFolderStream.toList();
+      final previousCacheFolderStream = imgTempDir.list();
+      final previousCacheFolders = await previousCacheFolderStream.toList();
 
-    for (final folder in previousCacheFolders) {
-      _deleteQuietly(folder); // not wait.
+      for (final folder in previousCacheFolders) {
+        _deleteQuietly(folder); // not wait.
+      }
+    } catch (e) {
+      log("이전 임시 디렉터리 정리 중 오류 무시: $e", name: "ImageUtil");
     }
   }
 
   static Future<void> _cleanUpLegacyTempDir(Directory newCacheFolderDir) async {
-    // new version folder detected. return fast.
-    if (await newCacheFolderDir.exists()) return;
+    // 보조적 정리 작업이므로 어떤 예외도 init 을 실패시키지 않도록 전체를 감싼다.
+    try {
+      // new version folder detected. return fast.
+      if (await newCacheFolderDir.exists()) return;
 
-    final tempDir = await getTemporaryDirectory();
-    final subDirSteam = tempDir.list();
+      final tempDir = await getTemporaryDirectory();
+      final subDirSteam = tempDir.list();
 
-    await for (final dir in subDirSteam) {
-      if (dir case Directory(:final path)) {
-        final name = path.split("/").last;
-        if (name.startsWith(_oldV1PathPrefix)) {
-          _deleteQuietly(dir); // not wait.
+      await for (final dir in subDirSteam) {
+        if (dir case Directory(:final path)) {
+          final name = path.split("/").last;
+          if (name.startsWith(_oldV1PathPrefix)) {
+            _deleteQuietly(dir); // not wait.
+          }
         }
       }
+    } catch (e) {
+      log("레거시 임시 디렉터리 정리 중 오류 무시: $e", name: "ImageUtil");
     }
   }
 
