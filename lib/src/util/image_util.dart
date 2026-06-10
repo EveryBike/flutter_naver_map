@@ -1,6 +1,6 @@
 import "dart:convert" show utf8;
 import "dart:developer" show log;
-import "dart:io" show Directory, File, FileSystemException;
+import "dart:io" show Directory, File, FileSystemEntity, FileSystemException;
 import "dart:typed_data" show Uint8List;
 
 import "package:crypto/crypto.dart" show sha256;
@@ -67,31 +67,49 @@ class ImageUtil {
   }
 
   static Future<void> _cleanUpPreviousTempDir(Directory imgTempDir) async {
-    if (!(await imgTempDir.exists())) return; // guard.
+    // 보조적 정리 작업이므로 어떤 예외도 init 을 실패시키지 않도록 전체를 감싼다.
+    // (list()/toList() 스트림 순회 중 동시 삭제·권한 등으로 FileSystemException 가능)
+    try {
+      if (!(await imgTempDir.exists())) return; // guard.
 
-    final previousCacheFolderStream = imgTempDir.list();
-    final previousCacheFolders = await previousCacheFolderStream.toList();
+      final previousCacheFolderStream = imgTempDir.list();
+      final previousCacheFolders = await previousCacheFolderStream.toList();
 
-    for (final folder in previousCacheFolders) {
-      folder.delete(recursive: true); // not wait.
+      for (final folder in previousCacheFolders) {
+        _deleteQuietly(folder); // not wait.
+      }
+    } catch (e) {
+      log("이전 임시 디렉터리 정리 중 오류 무시: $e", name: "ImageUtil");
     }
   }
 
   static Future<void> _cleanUpLegacyTempDir(Directory newCacheFolderDir) async {
-    // new version folder detected. return fast.
-    if (await newCacheFolderDir.exists()) return;
+    // 보조적 정리 작업이므로 어떤 예외도 init 을 실패시키지 않도록 전체를 감싼다.
+    try {
+      // new version folder detected. return fast.
+      if (await newCacheFolderDir.exists()) return;
 
-    final tempDir = await getTemporaryDirectory();
-    final subDirSteam = tempDir.list();
+      final tempDir = await getTemporaryDirectory();
+      final subDirSteam = tempDir.list();
 
-    await for (final dir in subDirSteam) {
-      if (dir case Directory(:final path)) {
-        final name = path.split("/").last;
-        if (name.startsWith(_oldV1PathPrefix)) {
-          dir.delete(recursive: true); // not wait.
+      await for (final dir in subDirSteam) {
+        if (dir case Directory(:final path)) {
+          final name = path.split("/").last;
+          if (name.startsWith(_oldV1PathPrefix)) {
+            _deleteQuietly(dir); // not wait.
+          }
         }
       }
+    } catch (e) {
+      log("레거시 임시 디렉터리 정리 중 오류 무시: $e", name: "ImageUtil");
     }
+  }
+
+  /// fire-and-forget 삭제. 앱 시작 시 이전 캐시 폴더를 정리할 때, 동시 init 경합이나
+  /// 이미 삭제된 경로로 인해 PathNotFoundException 이 unhandled async exception 으로
+  /// 터지던 문제를 방지한다. (delete 를 await 하지 않으므로 시작을 블로킹하지 않음)
+  static void _deleteQuietly(FileSystemEntity entity) {
+    entity.delete(recursive: true).catchError((_) => entity);
   }
 
   /// using <= 1.4.2
