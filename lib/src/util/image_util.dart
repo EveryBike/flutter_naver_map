@@ -1,6 +1,6 @@
 import "dart:convert" show utf8;
 import "dart:developer" show log;
-import "dart:io" show Directory, File, FileSystemException;
+import "dart:io" show Directory, File, FileSystemEntity, FileSystemException;
 import "dart:typed_data" show Uint8List;
 
 import "package:crypto/crypto.dart" show sha256;
@@ -73,7 +73,7 @@ class ImageUtil {
     final previousCacheFolders = await previousCacheFolderStream.toList();
 
     for (final folder in previousCacheFolders) {
-      folder.delete(recursive: true); // not wait.
+      _deleteQuietly(folder); // not wait.
     }
   }
 
@@ -88,10 +88,17 @@ class ImageUtil {
       if (dir case Directory(:final path)) {
         final name = path.split("/").last;
         if (name.startsWith(_oldV1PathPrefix)) {
-          dir.delete(recursive: true); // not wait.
+          _deleteQuietly(dir); // not wait.
         }
       }
     }
+  }
+
+  /// fire-and-forget 삭제. 앱 시작 시 이전 캐시 폴더를 정리할 때, 동시 init 경합이나
+  /// 이미 삭제된 경로로 인해 PathNotFoundException 이 unhandled async exception 으로
+  /// 터지던 문제를 방지한다. (delete 를 await 하지 않으므로 시작을 블로킹하지 않음)
+  static void _deleteQuietly(FileSystemEntity entity) {
+    entity.delete(recursive: true).catchError((_) => entity);
   }
 
   /// using <= 1.4.2
