@@ -7,7 +7,10 @@ import android.content.Context
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
 import com.naver.maps.map.MapView
 import com.naver.maps.map.NaverMap
 import dev.note11.flutter_naver_map.flutter_naver_map.controller.NaverMapControlSender
@@ -29,6 +32,7 @@ internal class NaverMapView(
     private val channel: MethodChannel,
     private val overlayController: OverlayHandler,
     private val usingGLSurfaceView: Boolean?,
+    private val usingNativeCompass: Boolean,
 ) : PlatformView, Application.ActivityLifecycleCallbacks, ComponentCallbacks {
 
     private lateinit var naverMap: NaverMap
@@ -67,8 +71,37 @@ internal class NaverMapView(
         setMapEventListeners()
 
         mapView.onCreate(null)
+        configureNativeCompass()
         if (::naverMap.isInitialized) naverMapControlSender.onMapReady()
         deactivateLogo()
+    }
+
+    private fun configureNativeCompass() {
+        if (!usingNativeCompass) return
+
+        naverMap.uiSettings.isCompassEnabled = true
+
+        val compass = mapView.findViewById<View>(com.naver.maps.map.R.id.navermap_compass)
+            ?: return
+        val controls = compass.parent as? View ?: return
+        val density = mapView.resources.displayMetrics.density
+        fun dp(value: Int) = (value * density + 0.5f).toInt()
+
+        mapView.findViewById<View>(com.naver.maps.map.R.id.navermap_compass_icon)
+            ?.layoutParams
+            ?.also { params ->
+                params.width = dp(36)
+                params.height = dp(36)
+            }
+
+        controls.layoutParams = FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            Gravity.END or Gravity.BOTTOM,
+        ).apply {
+            marginEnd = dp(20)
+            bottomMargin = dp(183)
+        }
     }
 
     private fun deactivateLogo() {

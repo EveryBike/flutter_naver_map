@@ -25,6 +25,11 @@ class NaverMap extends StatefulWidget {
   @visibleForTesting
   final bool? forceGLSurfaceView;
 
+  /// Uses the NAVER Android SDK compass instead of the Flutter camera-stream
+  /// compass. This avoids rebuilding a Flutter compositing layer for every
+  /// native camera frame.
+  final bool androidUseNativeCompass;
+
   /*
     --- Events ---
   */
@@ -97,6 +102,7 @@ class NaverMap extends StatefulWidget {
     this.onCustomStyleLoadFailed,
     @visibleForTesting this.forceHybridComposition,
     @visibleForTesting this.forceGLSurfaceView,
+    this.androidUseNativeCompass = false,
   });
 
   @override
@@ -135,6 +141,8 @@ class _NaverMapState extends State<NaverMap>
             legacyMapInitializer._androidSdkVersion,
         forceHybridComposition: widget.forceHybridComposition,
         forceGLSurfaceView: widget.forceGLSurfaceView,
+        androidUseNativeCompass:
+            widget.androidUseNativeCompass && widget.options.compassEnable,
       )),
       Positioned.fill(child: _uiLayer(widget.options)),
     ]);
@@ -152,7 +160,8 @@ class _NaverMapState extends State<NaverMap>
           _scaleBar(initCameraPosition: options.initialCameraPosition),
         if (options.locationButtonEnable)
           _locationButton(nightModeEnable: options.nightModeEnable),
-        if (options.compassEnable)
+        if (options.compassEnable &&
+            !(Platform.isAndroid && widget.androidUseNativeCompass))
           _compassWidget(
               initCameraPosition: options.initialCameraPosition,
               hideWhenUnrotated: options.compassHideWhenUnrotated),

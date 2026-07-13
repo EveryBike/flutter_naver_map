@@ -13,6 +13,7 @@ class _PlatformViewCreator {
     required int? androidSdkVersion,
     bool? forceHybridComposition,
     bool? forceGLSurfaceView,
+    bool androidUseNativeCompass = false,
   }) {
     if (Platform.isAndroid) {
       return PlatformViewLink(
@@ -28,6 +29,9 @@ class _PlatformViewCreator {
               : PlatformViewsService.initAndroidView;
 
           final rawCreationParameters = creationParams.map;
+          rawCreationParameters.addAll({
+            "nativeCompass": androidUseNativeCompass,
+          });
 
           // RenderView(Impl Android Side), Display Mode
           // API 23 ~ 29, 33 ~ 34 : TextureView, Texture Layer Hybrid Composition.
