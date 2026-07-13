@@ -28,6 +28,9 @@ class _PlatformViewCreator {
               : PlatformViewsService.initAndroidView;
 
           final rawCreationParameters = creationParams.map;
+          rawCreationParameters.addAll({
+            "hybrid": forceHybridComposition == true,
+          });
 
           // RenderView(Impl Android Side), Display Mode
           // API 23 ~ 29, 33 ~ 34 : TextureView, Texture Layer Hybrid Composition.

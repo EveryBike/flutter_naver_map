@@ -29,6 +29,7 @@ internal class NaverMapView(
     private val channel: MethodChannel,
     private val overlayController: OverlayHandler,
     private val usingGLSurfaceView: Boolean?,
+    private val usingHybridComposition: Boolean,
 ) : PlatformView, Application.ActivityLifecycleCallbacks, ComponentCallbacks {
 
     private lateinit var naverMap: NaverMap
@@ -53,7 +54,9 @@ internal class NaverMapView(
 
     init {
         registerLifecycleCallback()
-        TextureSurfaceViewUtil.installInvalidator(mapView)
+        if (!usingHybridComposition) {
+            TextureSurfaceViewUtil.installInvalidator(mapView)
+        }
     }
 
     private fun setTempMethodCallHandler() {

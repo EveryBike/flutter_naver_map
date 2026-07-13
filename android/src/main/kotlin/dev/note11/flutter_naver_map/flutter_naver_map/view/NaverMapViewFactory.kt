@@ -27,6 +27,7 @@ internal class NaverMapViewFactory(
         val convertedArgs = args!!.asNullableMap()
         val options = NaverMapViewOptions.fromMessageable(convertedArgs)
         val usingGLSurfaceView = convertedArgs["glsurface"] as? Boolean?
+        val usingHybridComposition = convertedArgs["hybrid"] as? Boolean ?: false
 
         return NaverMapView(
             activity = activity,
@@ -35,6 +36,7 @@ internal class NaverMapViewFactory(
             channel = channel,
             overlayController = overlayController,
             usingGLSurfaceView = usingGLSurfaceView,
+            usingHybridComposition = usingHybridComposition,
         )
     }
 }
