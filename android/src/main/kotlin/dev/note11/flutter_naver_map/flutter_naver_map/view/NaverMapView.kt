@@ -9,10 +9,10 @@ import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
-import android.view.ViewGroup
 import android.widget.FrameLayout
 import com.naver.maps.map.MapView
 import com.naver.maps.map.NaverMap
+import com.naver.maps.map.widget.CompassView
 import dev.note11.flutter_naver_map.flutter_naver_map.controller.NaverMapControlSender
 import dev.note11.flutter_naver_map.flutter_naver_map.controller.NaverMapController
 import dev.note11.flutter_naver_map.flutter_naver_map.controller.getCustomStyleCallback
@@ -37,6 +37,7 @@ internal class NaverMapView(
 
     private lateinit var naverMap: NaverMap
     private lateinit var naverMapControlSender: NaverMapControlSender
+    private var nativeCompass: CompassView? = null
     private val mapView =
         MapView(flutterProvidedContext, naverMapViewOptions.naverMapOptions.apply {
             if (usingGLSurfaceView != null) {
@@ -79,29 +80,28 @@ internal class NaverMapView(
     private fun configureNativeCompass() {
         if (!usingNativeCompass) return
 
-        naverMap.uiSettings.isCompassEnabled = true
-
-        val compass = mapView.findViewById<View>(com.naver.maps.map.R.id.navermap_compass)
-            ?: return
-        val controls = compass.parent as? View ?: return
         val density = mapView.resources.displayMetrics.density
         fun dp(value: Int) = (value * density + 0.5f).toInt()
+        val compass = CompassView(flutterProvidedContext).apply {
+            map = naverMap
+        }
 
-        mapView.findViewById<View>(com.naver.maps.map.R.id.navermap_compass_icon)
+        compass.findViewById<View>(com.naver.maps.map.R.id.navermap_compass_icon)
             ?.layoutParams
             ?.also { params ->
                 params.width = dp(36)
                 params.height = dp(36)
             }
 
-        controls.layoutParams = FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT,
+        mapView.addView(compass, FrameLayout.LayoutParams(
+            dp(36),
+            dp(36),
             Gravity.END or Gravity.BOTTOM,
         ).apply {
             marginEnd = dp(20)
             bottomMargin = dp(183)
-        }
+        })
+        nativeCompass = compass
     }
 
     private fun deactivateLogo() {
@@ -161,6 +161,8 @@ internal class NaverMapView(
     override fun dispose() {
         unRegisterLifecycleCallback()
         removeMapEventListeners()
+        nativeCompass?.map = null
+        nativeCompass = null
 
         mapView.run {
             onPause()

@@ -20,6 +20,8 @@ void main() {
     );
     expect(platformViewSource, contains('"nativeCompass"'));
     expect(nativeViewSource, contains("configureNativeCompass"));
-    expect(nativeViewSource, contains("isCompassEnabled = true"));
+    expect(nativeViewSource, contains("CompassView(flutterProvidedContext)"));
+    expect(nativeViewSource, contains("mapView.addView(compass"));
+    expect(nativeViewSource, isNot(contains("controls.layoutParams")));
   });
 }
