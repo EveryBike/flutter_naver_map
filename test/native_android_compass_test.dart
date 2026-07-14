@@ -24,4 +24,25 @@ void main() {
     expect(nativeViewSource, contains("mapView.addView(compass"));
     expect(nativeViewSource, isNot(contains("controls.layoutParams")));
   });
+
+  test("Android-only creation args are removed before map option decoding", () {
+    final factorySource = File(
+      "android/src/main/kotlin/dev/note11/flutter_naver_map/flutter_naver_map/view/NaverMapViewFactory.kt",
+    ).readAsStringSync();
+
+    final nativeCompassRemoval = factorySource.indexOf(
+      'convertedArgs.remove("nativeCompass")',
+    );
+    final glSurfaceRemoval = factorySource.indexOf(
+      'convertedArgs.remove("glsurface")',
+    );
+    final optionDecoding = factorySource.indexOf(
+      "NaverMapViewOptions.fromMessageable(convertedArgs)",
+    );
+
+    expect(nativeCompassRemoval, greaterThanOrEqualTo(0));
+    expect(glSurfaceRemoval, greaterThanOrEqualTo(0));
+    expect(nativeCompassRemoval, lessThan(optionDecoding));
+    expect(glSurfaceRemoval, lessThan(optionDecoding));
+  });
 }

@@ -24,10 +24,10 @@ internal class NaverMapViewFactory(
             MethodChannel(messenger, FlutterNaverMapPlugin.createOverlayMethodChannelName(viewId))
         val overlayController = OverlayController(overlayChannel, context)
 
-        val convertedArgs = args!!.asNullableMap()
+        val convertedArgs = args!!.asNullableMap().toMutableMap()
+        val usingGLSurfaceView = convertedArgs.remove("glsurface") as? Boolean
+        val usingNativeCompass = convertedArgs.remove("nativeCompass") as? Boolean ?: false
         val options = NaverMapViewOptions.fromMessageable(convertedArgs)
-        val usingGLSurfaceView = convertedArgs["glsurface"] as? Boolean?
-        val usingNativeCompass = convertedArgs["nativeCompass"] as? Boolean ?: false
 
         return NaverMapView(
             activity = activity,
