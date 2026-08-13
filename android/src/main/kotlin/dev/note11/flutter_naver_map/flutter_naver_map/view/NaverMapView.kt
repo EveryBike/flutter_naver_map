@@ -104,6 +104,21 @@ internal class NaverMapView(
         nativeCompass = compass
     }
 
+    /**
+     * 나침반은 Flutter 위젯 트리 밖의 native view 라 Flutter 쪽 컨트롤 스택 높이를
+     * 알 수 없다. 그 높이가 상태에 따라 바뀌므로 Dart 가 실측값을 넘겨준다.
+     * 생성 시의 기본 마진은 첫 갱신이 오기 전까지만 쓰인다.
+     */
+    private fun setNativeCompassBottomMargin(marginDp: Double) {
+        val compass = nativeCompass ?: return
+        val params = compass.layoutParams as? FrameLayout.LayoutParams ?: return
+        val density = mapView.resources.displayMetrics.density
+        val margin = (marginDp * density + 0.5f).toInt()
+        if (params.bottomMargin == margin) return
+        params.bottomMargin = margin
+        compass.layoutParams = params
+    }
+
     private fun deactivateLogo() {
         val logoView = mapView.findViewById<View>(com.naver.maps.map.R.id.navermap_logo) ?: return
         logoView.visibility = View.GONE
@@ -111,7 +126,12 @@ internal class NaverMapView(
 
     private fun initializeMapController() {
         naverMapControlSender = NaverMapController(
-            naverMap, channel, flutterProvidedContext, overlayController, mapView::invalidate
+            naverMap,
+            channel,
+            flutterProvidedContext,
+            overlayController,
+            mapView::invalidate,
+            ::setNativeCompassBottomMargin,
         ).apply {
             rawNaverMapOptionTempCache?.let { updateOptions(it.asNullableMap()) {} }
         }

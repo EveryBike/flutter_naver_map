@@ -43,6 +43,7 @@ internal class NaverMapController(
     private val applicationContext: Context,
     private val overlayController: OverlayHandler,
     viewInvalidator: () -> Unit,
+    private val compassBottomMarginSetter: (Double) -> Unit = {},
 ) : NaverMapControlSender, NaverMapControlHandler {
     private var naverMapViewOptions: NaverMapViewOptions? = null
     private val clusteringController =
@@ -64,6 +65,12 @@ internal class NaverMapController(
             finishCallback { onSuccess(false) }
             cancelCallback { onSuccess(true) }
         })
+    }
+
+    /** 나침반은 Flutter 레이아웃 밖 native view 라 Dart 가 위치를 갱신해 준다. */
+    override fun setCompassBottomMargin(marginDp: Double, onSuccess: () -> Unit) {
+        compassBottomMarginSetter(marginDp)
+        onSuccess()
     }
 
     override fun cancelTransitions(reason: Int, onSuccess: () -> Unit) {

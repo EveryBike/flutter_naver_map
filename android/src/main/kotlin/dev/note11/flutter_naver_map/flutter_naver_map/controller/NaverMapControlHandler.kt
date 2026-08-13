@@ -31,6 +31,9 @@ internal interface NaverMapControlHandler {
         "cancelTransitions" -> cancelTransitions(
             reason = call.arguments.asInt(), onSuccess = result::send
         )
+        "setCompassBottomMargin" -> setCompassBottomMargin(
+            marginDp = call.arguments.asDouble(), onSuccess = result::send
+        )
         "getCameraPosition" -> getCameraPosition(result::send)
         "getContentBounds" -> getContentBounds(
             withPadding = call.arguments.asBoolean(),
@@ -116,6 +119,8 @@ internal interface NaverMapControlHandler {
     }
 
     fun updateCamera(cameraUpdate: CameraUpdate, onSuccess: (isCanceled: Boolean) -> Unit)
+
+    fun setCompassBottomMargin(marginDp: Double, onSuccess: () -> Unit)
 
     fun cancelTransitions(reason: Int, onSuccess: () -> Unit)
 

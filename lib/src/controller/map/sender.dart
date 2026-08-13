@@ -6,6 +6,15 @@ abstract class _NaverMapControlSender {
   ///  true if the camera update was canceled
   Future<bool> updateCamera(NCameraUpdate cameraUpdate);
 
+  /// Android native 나침반의 하단 여백(dp)을 갱신합니다.
+  ///
+  /// 나침반은 Flutter 위젯 트리 밖의 native view 이므로 Flutter 쪽 지도 컨트롤
+  /// 스택 높이를 알 수 없습니다. 그 높이가 상태에 따라 바뀌는 앱은 실측값을
+  /// 넘겨 나침반이 컨트롤 묶음에 붙어 있게 유지할 수 있습니다.
+  ///
+  /// androidUseNativeCompass 가 false 이거나 iOS 에서는 아무 동작도 하지 않습니다.
+  Future<void> setCompassBottomMargin(double marginDp);
+
   /// 카메라가 이동 중일 때, 카메라 이동을 취소 시킵니다.
   Future<void> cancelTransitions(
       {NCameraUpdateReason reason = NCameraUpdateReason.developer});

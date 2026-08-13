@@ -63,6 +63,18 @@ class _NaverMapControllerImpl
   }
 
   @override
+  Future<void> setCompassBottomMargin(double marginDp) async {
+    try {
+      await invokeMethod(
+        "setCompassBottomMargin",
+        NMessageable.forOnce(marginDp),
+      );
+    } on MissingPluginException {
+      // iOS 는 native 나침반의 위치를 노출하지 않는다. 조용히 무시한다.
+    }
+  }
+
+  @override
   Future<void> cancelTransitions(
       {NCameraUpdateReason reason = NCameraUpdateReason.developer}) async {
     await invokeMethod("cancelTransitions", reason);
